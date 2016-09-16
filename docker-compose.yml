@@ -1,0 +1,45 @@
+version: '2'
+
+services:
+
+    pgAdmin:
+        image: fenglc/pgadmin4
+        ports:
+            - "5050:5050"
+        container_name: pgAdmin
+
+    postgresql:
+        build: .docker/postgesql
+        ports:
+            - "5432:5432"
+        volumes:
+            - ./data/postgresql:/var/lib/postgresql
+        environment:
+            - POSTGRES_USER=db_user
+            - POSTGRES_PASSWORD=db_password
+            - POSTGRES_DB=demo
+        privileged: true
+        container_name: postgresql
+        depends_on:
+            - pgAdmin
+
+    elasticsearch:
+        image: elasticsearch:latest
+        ports:
+            - "9200:9200"
+        volumes:
+            - ./data/elasticsearch:/var/lib/elasticsearch/data
+            - ./data/log/elasticsearch:/var/log/elasticsearch
+        container_name: elasticsearch
+
+    apache:
+        build: .docker/apache
+        ports:
+            - "80:80"
+        volumes:
+            - .:/var/www/html
+            - ./data/sessions:/var/lib/sessions
+        container_name: apache
+        depends_on:
+            - elasticsearch
+            - postgresql
